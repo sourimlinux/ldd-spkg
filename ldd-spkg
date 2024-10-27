@@ -1,0 +1,22 @@
+#!/bin/bash
+
+COLOR_RESET="\e[0m"
+COLOR_GREEN="\e[32m"
+
+rm -rf /tmp/rootfs
+mkdir -p /tmp/rootfs
+
+echo "Unpacking..."
+tar xf $1 -C /tmp
+echo "Unpacking rootfs"
+tar xf /tmp/rootfs.tar.xz -C /tmp/rootfs
+
+cd /tmp/rootfs/usr/
+for prog in `find . -name "*" -type f`; do
+        ldd /tmp/rootfs/usr/$prog 2> /tmp/LDD_SPKG | tee > /tmp/LDD_SPKG_OUT
+        if [[ "`cat /tmp/LDD_SPKG`" != *"not a dynamic executable"* ]]; then
+                echo -e "LDD - $COLOR_GREEN$prog$COLOR_RESET"
+                cat /tmp/LDD_SPKG_OUT
+        fi
+done
+cd - > /dev/null
